@@ -1,0 +1,69 @@
+using System.Data;
+using System.Text.Json;
+
+public class Program
+{
+    public static Dictionary<String, String> passwordBook;
+    public static string path = "map.json";
+    public static string availableChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^*_-+";
+    /// <summary>
+    /// The main method allows the user to get and set passwords for different services, using the commands "Get" and "Set"
+    /// </summary>
+    /// <param name="args"></param>
+    public static void Main(String[] args)
+    {
+        Random chance = new Random();
+        if (!File.Exists(path))
+        {
+            passwordBook = new Dictionary<string, string>();
+        }
+        else 
+        {
+            var json = File.ReadAllText(path);
+            passwordBook = JsonSerializer.Deserialize<Dictionary<String, String>>(json);
+        }
+        String next = Console.ReadLine();
+        while(next != "/exit")
+        {
+            if(next == "Get")
+            {
+                try
+                {
+                    next = Console.ReadLine();
+                    String toPrint = passwordBook[next];
+                    Console.WriteLine(toPrint);
+                }
+                catch(KeyNotFoundException)
+                {
+                    Console.WriteLine("Failed to Find (Type 'Set' to Set)");
+                }
+            }
+            if(next == "Set")
+            {
+                next = Console.ReadLine();
+                String toSetFor = makeRandomPassword(chance, availableChars);
+                passwordBook.Add(next, toSetFor);
+                Console.WriteLine(next + "'s password is now " + toSetFor);
+                var output = JsonSerializer.Serialize(passwordBook, new JsonSerializerOptions { WriteIndented = true});
+                File.WriteAllText(path, output);
+            }
+            next = Console.ReadLine();
+        }
+    }
+    /// <summary>
+    /// This function generates a random 13 character password with given restrictions.
+    /// </summary>
+    /// <param name="chance">The Random object used to randomize the passwords</param>
+    /// <param name="availableChars">The characters that can be used in the password, 
+    ///                                 to avoid having a system that generates illegal passwords</param>
+    /// <returns>String - a random 13-digit Password</returns>
+    public static String makeRandomPassword(Random chance, String availableChars)
+    {
+        String toReturn = "";
+        for(int i = 0; i < 13; i++)
+        {
+            toReturn += availableChars[chance.Next(0, availableChars.Length)];
+        }
+        return toReturn;
+    }
+}
